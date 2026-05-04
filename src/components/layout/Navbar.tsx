@@ -10,12 +10,14 @@ const NAV_LINKS = [
 ]
 
 const AUTH_ROUTES = ["/login", "/register"]
+const HIDE_NAV_ROUTES = ["/dashboard"]
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { pathname } = useLocation()
 
   const isAuthPage = AUTH_ROUTES.includes(pathname)
+  const isDashboard = HIDE_NAV_ROUTES.includes(pathname)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
@@ -31,8 +33,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav — hanya tampil di non-auth page */}
-        {!isAuthPage && (
+        {/* Desktop Nav — hanya tampil di non-auth dan non-dashboard page */}
+        {!isAuthPage && !isDashboard && (
           <nav className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link) => (
               <a
@@ -47,22 +49,24 @@ export default function Navbar() {
         )}
 
         {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/register">
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5">
-              Daftar
-            </Button>
-          </Link>
-          <Link
-            to="/login"
-            className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-          >
-            Masuk
-          </Link>
-        </div>
+        {!isDashboard && (
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/register">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5">
+                Daftar
+              </Button>
+            </Link>
+            <Link
+              to="/login"
+              className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Masuk
+            </Link>
+          </div>
+        )}
 
-        {/* Mobile Toggle — hanya di non-auth page */}
-        {!isAuthPage && (
+        {/* Mobile Toggle — hanya di non-auth dan non-dashboard page */}
+        {!isAuthPage && !isDashboard && (
           <button
             className="md:hidden text-gray-600 hover:text-blue-600"
             onClick={() => setIsOpen(!isOpen)}

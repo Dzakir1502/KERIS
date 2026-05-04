@@ -4,6 +4,7 @@ import Footer from "@/components/layout/Footer"
 import HomePage from "@/app/home/HomePage"
 import LoginPage from "@/app/login/LoginPage"
 import RegisterPage from "@/app/register/RegisterPage"
+import DashboardPage from "@/app/dashboard/DashboardPage"
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
     </BrowserRouter>
   )

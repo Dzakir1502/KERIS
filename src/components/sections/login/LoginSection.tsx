@@ -1,11 +1,12 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginSection() {
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F3F4FF] px-4 pt-16">
@@ -23,7 +24,10 @@ export default function LoginSection() {
         </div>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+<form className="space-y-4" onSubmit={(e) => {
+            e.preventDefault()
+            navigate("/dashboard")
+          }}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
               Email
