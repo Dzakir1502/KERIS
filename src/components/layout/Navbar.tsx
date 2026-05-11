@@ -10,14 +10,13 @@ const NAV_LINKS = [
 ]
 
 const AUTH_ROUTES = ["/login", "/register"]
-const HIDE_NAV_ROUTES = ["/dashboard"]
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { pathname } = useLocation()
 
   const isAuthPage = AUTH_ROUTES.includes(pathname)
-  const isDashboard = HIDE_NAV_ROUTES.includes(pathname)
+  const isDashboard = pathname.startsWith("/dashboard")
 
   if (isDashboard) {
     return null

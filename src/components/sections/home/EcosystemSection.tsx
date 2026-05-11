@@ -68,7 +68,7 @@ export default function EcosystemSection() {
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-gray-500" />
                 </div>
-                <span className="text-gray-400 text-xs">View Course</span>
+                <span className="text-gray-400 text-xs">Lihat Kursus</span>
               </div>
               {/* Text */}
               <div>
