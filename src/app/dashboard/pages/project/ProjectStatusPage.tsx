@@ -1,85 +1,66 @@
-import { Clock, MonitorPlay, CheckCircle2, Monitor, BarChart2, Pencil, Smartphone, Eye, Lock, PenLine, Sparkles, Square } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Clock, MonitorPlay, CheckCircle2, Eye, Sparkles, Loader2, FolderOpen } from "lucide-react"
+import { projectAPI, type BackendSubmission } from "@/services/projectAPI"
 
-const stats = [
-  {
-    label: "Pending",
-    value: "04",
-    icon: <Clock className="h-6 w-6 text-orange-400" />,
-    iconBg: "bg-orange-50",
-    valueColor: "text-orange-500",
-  },
-  {
-    label: "In Review",
-    value: "12",
-    icon: <MonitorPlay className="h-6 w-6 text-blue-400" />,
-    iconBg: "bg-blue-50",
-    valueColor: "text-blue-600",
-  },
-  {
-    label: "Validated",
-    value: "38",
-    icon: <CheckCircle2 className="h-6 w-6 text-slate-500" />,
-    iconBg: "bg-slate-100",
-    valueColor: "text-slate-900",
-  },
-]
+function statusBadge(status: BackendSubmission["status"]) {
+  switch (status) {
+    case "approved":
+      return { label: "Validated", style: "bg-green-100 text-green-700" }
+    case "rejected":
+      return { label: "Rejected", style: "bg-red-100 text-red-700" }
+    default:
+      return { label: "Pending", style: "bg-orange-100 text-orange-600" }
+  }
+}
 
-const projects = [
-  {
-    icon: <Monitor className="h-5 w-5 text-blue-600" />,
-    iconBg: "bg-blue-50",
-    title: "Building Landing Page UMKM Lokal",
-    subtitle: "Web Development • Q3 Batch",
-    date: "Oct 12, 2023",
-    status: "Validated",
-    statusStyle: "bg-green-100 text-green-700",
-    reviewIcon: <Sparkles className="h-3.5 w-3.5 text-slate-400 shrink-0" />,
-    review: '"Exemplary semantic structure...',
-    actionIcon: <Eye className="h-5 w-5" />,
-    actionStyle: "text-blue-500 hover:text-blue-700",
-  },
-  {
-    icon: <BarChart2 className="h-5 w-5 text-orange-500" />,
-    iconBg: "bg-orange-50",
-    title: "E-Commerce Data Analysis",
-    subtitle: "Data Science • Final Assignment",
-    date: "Nov 05, 2023",
-    status: "In Review",
-    statusStyle: "bg-blue-100 text-blue-700",
-    reviewIcon: <Square className="h-3.5 w-3.5 text-slate-300 shrink-0" />,
-    review: "Awaiting Senior Architect review",
-    actionIcon: <Lock className="h-5 w-5" />,
-    actionStyle: "text-slate-300 cursor-not-allowed",
-  },
-  {
-    icon: <Pencil className="h-5 w-5 text-orange-500" />,
-    iconBg: "bg-orange-50",
-    title: "Atelier Brand Identity Kit",
-    subtitle: "Visual Design • Branding 101",
-    date: "Nov 18, 2023",
-    status: "Pending",
-    statusStyle: "bg-orange-100 text-orange-600",
-    reviewIcon: null,
-    review: "Queued for initial validation",
-    actionIcon: <PenLine className="h-5 w-5" />,
-    actionStyle: "text-blue-500 hover:text-blue-700",
-  },
-  {
-    icon: <Smartphone className="h-5 w-5 text-blue-600" />,
-    iconBg: "bg-blue-50",
-    title: "HealthTech Mobile Prototype",
-    subtitle: "UX Design • Capstone",
-    date: "Sept 22, 2023",
-    status: "Validated",
-    statusStyle: "bg-green-100 text-green-700",
-    reviewIcon: <Sparkles className="h-3.5 w-3.5 text-slate-400 shrink-0" />,
-    review: '"Outstanding user journey ma...',
-    actionIcon: <Eye className="h-5 w-5" />,
-    actionStyle: "text-blue-500 hover:text-blue-700",
-  },
-]
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+}
 
 export default function ProjectStatusPage() {
+  const [submissions, setSubmissions] = useState<BackendSubmission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    projectAPI.getMySubmissions()
+      .then(setSubmissions)
+      .catch(() => setError("Gagal memuat data submission."))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const pendingCount = submissions.filter((s) => s.status === "pending").length
+  const inReviewCount = 0
+  const validatedCount = submissions.filter((s) => s.status === "approved").length
+
+  const stats = [
+    {
+      label: "Pending",
+      value: loading ? "—" : String(pendingCount).padStart(2, "0"),
+      icon: <Clock className="h-6 w-6 text-orange-400" />,
+      iconBg: "bg-orange-50",
+      valueColor: "text-orange-500",
+    },
+    {
+      label: "In Review",
+      value: loading ? "—" : String(inReviewCount).padStart(2, "0"),
+      icon: <MonitorPlay className="h-6 w-6 text-blue-400" />,
+      iconBg: "bg-blue-50",
+      valueColor: "text-blue-600",
+    },
+    {
+      label: "Validated",
+      value: loading ? "—" : String(validatedCount).padStart(2, "0"),
+      icon: <CheckCircle2 className="h-6 w-6 text-slate-500" />,
+      iconBg: "bg-slate-100",
+      valueColor: "text-slate-900",
+    },
+  ]
+
   return (
     <div className="space-y-6">
 
@@ -87,7 +68,7 @@ export default function ProjectStatusPage() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Project Status</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Track and manage your intellectual contributions within the Atelier.
+          Pantau status submission projectmu yang telah dikirimkan ke mentor.
         </p>
       </div>
 
@@ -113,54 +94,110 @@ export default function ProjectStatusPage() {
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         {/* Table header */}
         <div className="grid grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 px-6 py-3 border-b border-slate-100 bg-slate-50">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Project Details</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Submitted Date</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Project</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Tanggal Kirim</p>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Status</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Review Results</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Actions</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Feedback</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Detail</p>
         </div>
+
+        {/* Loading state */}
+        {loading && (
+          <div className="flex items-center justify-center py-16 gap-3 text-slate-400">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">Memuat data submission...</span>
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loading && error && (
+          <div className="flex items-center justify-center py-16 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && submissions.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+              <FolderOpen className="h-8 w-8 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-slate-700">Belum ada submission</p>
+              <p className="mt-1 text-sm text-slate-400">
+                Kamu belum mengirim project apapun. Submit project pertamamu sekarang!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Rows */}
-        <div className="divide-y divide-slate-100">
-          {projects.map((p) => (
-            <div
-              key={p.title}
-              className="grid grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 transition-colors"
-            >
-              {/* Project Details */}
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${p.iconBg}`}>
-                  {p.icon}
+        {!loading && !error && submissions.length > 0 && (
+          <div className="divide-y divide-slate-100">
+            {submissions.map((sub) => {
+              const badge = statusBadge(sub.status)
+              return (
+                <div
+                  key={sub.id}
+                  className="grid grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 transition-colors"
+                >
+                  {/* Project Details */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
+                      <FolderOpen className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {sub.Project?.title ?? `Project #${sub.projectId}`}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {sub.Project?.category ?? "AI Development"}
+                        {sub.score != null && (
+                          <span className="ml-2 font-semibold text-orange-500">Score: {sub.score}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Submitted Date */}
+                  <p className="text-sm text-slate-500">{formatDate(sub.submittedAt)}</p>
+
+                  {/* Status badge */}
+                  <div>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${badge.style}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+
+                  {/* Feedback */}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {sub.feedback ? (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <p className="text-sm text-slate-500 truncate">"{sub.feedback}"</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic">
+                        {sub.status === "pending" ? "Menunggu review mentor" : "Belum ada feedback"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <a
+                    href={sub.projectLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 transition"
+                    title="Lihat repository"
+                  >
+                    <Eye className="h-5 w-5" />
+                  </a>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{p.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{p.subtitle}</p>
-                </div>
-              </div>
-
-              {/* Submitted Date */}
-              <p className="text-sm text-slate-500">{p.date}</p>
-
-              {/* Status badge */}
-              <div>
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${p.statusStyle}`}>
-                  {p.status}
-                </span>
-              </div>
-
-              {/* Review Results */}
-              <div className="flex items-center gap-1.5 min-w-0">
-                {p.reviewIcon}
-                <p className="text-sm text-slate-400 truncate">{p.review}</p>
-              </div>
-
-              {/* Actions */}
-              <button className={`transition ${p.actionStyle}`}>
-                {p.actionIcon}
-              </button>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
     </div>

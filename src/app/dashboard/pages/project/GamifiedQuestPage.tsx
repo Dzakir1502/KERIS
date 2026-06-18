@@ -1,7 +1,7 @@
 import { useState } from "react"
 import {
   Flame, Lightbulb, FileText, PersonStanding, Lock,
-  Sparkles, Fingerprint, ShieldCheck, Info, ArrowRight, Play
+  Sparkles, Fingerprint, ShieldCheck, Info
 } from "lucide-react"
 
 const quests = [

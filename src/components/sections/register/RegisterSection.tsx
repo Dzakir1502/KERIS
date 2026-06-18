@@ -4,8 +4,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 
-export default function RegisterSection() {
+interface RegisterSectionProps {
+  onRegister: (nama_lengkap: string, email: string, password: string) => Promise<void>;
+  nama_lengkap: string;
+  setNamaLengkap: (nama: string) => void;
+  email: string;
+  setEmail: (email: string) => void;
+  password: string;
+  setPassword: (password: string) => void;
+  error: string;
+  loading: boolean;
+}
+
+export default function RegisterSection({
+  onRegister,
+  nama_lengkap,
+  setNamaLengkap,
+  email,
+  setEmail,
+  password,
+  setPassword,
+  error,
+  loading
+}: RegisterSectionProps) {
   const [showPassword, setShowPassword] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onRegister(nama_lengkap, email, password);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F3F4FF] px-4 pt-16">
@@ -22,31 +49,29 @@ export default function RegisterSection() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Form */}
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nama Depan
-              </label>
-              <Input
-                id="firstName"
-                type="text"
-                placeholder="Budi"
-                className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nama Belakang
-              </label>
-              <Input
-                id="lastName"
-                type="text"
-                placeholder="Santoso"
-                className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
-              />
-            </div>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="nama" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Nama Lengkap
+            </label>
+            <Input
+              id="nama"
+              type="text"
+              placeholder="Budi Santoso"
+              value={nama_lengkap}
+              onChange={(e) => setNamaLengkap(e.target.value)}
+              className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
+              disabled={loading}
+              required
+            />
           </div>
 
           <div>
@@ -57,7 +82,11 @@ export default function RegisterSection() {
               id="email"
               type="email"
               placeholder="nama@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
+              disabled={loading}
+              required
             />
           </div>
 
@@ -69,40 +98,31 @@ export default function RegisterSection() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Minimal 8 karakter"
+                placeholder="Minimal 6 karakter"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="rounded-xl border-gray-200 focus-visible:ring-blue-500 pr-10"
+                disabled={loading}
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 aria-label="Toggle password visibility"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="pathway" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Minat Pathway
-            </label>
-            <select
-              id="pathway"
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="">Pilih pathway-mu</option>
-              <option value="web">Web Development</option>
-              <option value="mobile">Mobile Development</option>
-              <option value="ai">AI Development</option>
-            </select>
-          </div>
-
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-5 font-semibold mt-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-5 font-semibold mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
           >
-            Daftar Sekarang
+            {loading ? 'Sedang mendaftar...' : 'Daftar Sekarang'}
           </Button>
         </form>
 

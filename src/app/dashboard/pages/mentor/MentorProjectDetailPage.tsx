@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
   ArrowLeft, MessageSquare, CheckCircle2, Clock,
-  AlertTriangle, Star, ExternalLink, FileEdit, ChevronDown
+  AlertTriangle, Star, ExternalLink, FileEdit
 } from "lucide-react"
 
 const projectsData: Record<string, {
