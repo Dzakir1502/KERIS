@@ -1,46 +1,30 @@
+import { useEffect, useState } from "react"
 import { Monitor, ClipboardList, CheckCircle2 } from "lucide-react"
-
-const stats = [
-  {
-    label: "Current Stream",
-    value: "Web Development",
-    icon: <Monitor className="h-6 w-6 text-blue-600" />,
-    iconBg: "bg-blue-50",
-  },
-  {
-    label: "Project Tersedia",
-    value: "10 Projects",
-    icon: <ClipboardList className="h-6 w-6 text-orange-500" />,
-    iconBg: "bg-orange-50",
-  },
-  {
-    label: "Project Selesai",
-    value: "06 Projects",
-    icon: <CheckCircle2 className="h-6 w-6 text-green-500" />,
-    iconBg: "bg-green-50",
-  },
-]
+import { useNavigate } from "react-router-dom"
+import { projectAPI } from "@/services/projectAPI"
 
 const projects = [
   {
     level: "01",
     status: "ACTIVE",
     statusColor: "bg-green-100 text-green-700",
-    tags: ["HTML", "CSS", "JS"],
-    title: "Membangun Landing Page UMKM Lokal",
+    tags: ["PYTHON", "AI", "DATA"],
+    title: "Membangun Pipeline Analisis Data Performa Siswa",
     description:
-      "Pelajari dasar-dasar pengembangan web dengan membuat landing page profesional untuk usaha mikro kecil dan menengah di sekitarmu.",
+      "Bersihkan dataset riwayat belajar siswa yang kotor, bangun pipeline otomatis, dan visualisasikan faktor kelulusan menggunakan Python standar industri.",
     locked: false,
+    missionRoute: "/dashboard/project/mission/1",
   },
   {
     level: "02",
-    status: "LOCKED",
-    statusColor: "bg-slate-100 text-slate-500",
-    tags: ["REACT", "TAILWIND"],
-    title: "Dashboard Management Stok Barang",
+    status: "ACTIVE",
+    statusColor: "bg-green-100 text-green-700",
+    tags: ["PYTHON", "ML", "SCIKIT-LEARN"],
+    title: "Membangun Pipeline Machine Learning Prediksi Kelulusan Siswa",
     description:
-      "Kembangkan aplikasi dashboard interaktif untuk mengelola inventaris gudang menggunakan framework modern dan integrasi API dasar.",
-    locked: true,
+      "Latih model AI untuk mengenali pola belajar siswa dan memprediksi apakah siswa akan lulus atau gagal secara otomatis menggunakan Scikit-learn.",
+    locked: false,
+    missionRoute: "/dashboard/project/mission/2",
   },
   {
     level: "03",
@@ -51,11 +35,50 @@ const projects = [
     description:
       "Membangun platform belanja online lengkap dengan fitur keranjang, otentikasi user, dan sistem pembayaran terintegrasi.",
     locked: true,
+    missionRoute: null,
   },
 ]
 
+const TOTAL_PROJECTS = projects.length
+
 export default function ProjectDashboardPage() {
-  const progress = 20
+  const navigate = useNavigate()
+  const [approved, setApproved] = useState(0)
+  const [submitted, setSubmitted] = useState(0)
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  useEffect(() => {
+    projectAPI.getDashboardStats()
+      .then((stats) => {
+        setApproved(stats.projectsApproved)
+        setSubmitted(stats.projectsSubmitted)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingStats(false))
+  }, [])
+
+  const progress = TOTAL_PROJECTS > 0 ? Math.round((approved / TOTAL_PROJECTS) * 100) : 0
+
+  const stats = [
+    {
+      label: "Current Stream",
+      value: "AI Development",
+      icon: <Monitor className="h-6 w-6 text-blue-600" />,
+      iconBg: "bg-blue-50",
+    },
+    {
+      label: "Project Tersedia",
+      value: `${TOTAL_PROJECTS} Projects`,
+      icon: <ClipboardList className="h-6 w-6 text-orange-500" />,
+      iconBg: "bg-orange-50",
+    },
+    {
+      label: "Project Selesai",
+      value: loadingStats ? "—" : `${String(approved).padStart(2, "0")} Projects`,
+      icon: <CheckCircle2 className="h-6 w-6 text-green-500" />,
+      iconBg: "bg-green-50",
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -64,7 +87,7 @@ export default function ProjectDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Project Overview</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Welcome back, continue your learning journey to master full-stack development.
+          Welcome back, continue your learning journey to master AI development.
         </p>
       </div>
 
@@ -98,11 +121,15 @@ export default function ProjectDashboardPage() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="relative text-xs font-bold text-slate-900">{progress}%</span>
+            <span className="relative text-xs font-bold text-slate-900">
+              {loadingStats ? "—" : `${progress}%`}
+            </span>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Overall Progress</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{progress}% Done</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">
+              {loadingStats ? "Loading..." : `${progress}% Done`}
+            </p>
           </div>
         </div>
       </div>
@@ -121,10 +148,7 @@ export default function ProjectDashboardPage() {
         {/* Project cards */}
         <div className="divide-y divide-slate-100">
           {projects.map((project) => (
-            <div
-              key={project.level}
-              className="flex items-stretch gap-0"
-            >
+            <div key={project.level} className="flex items-stretch gap-0">
               {/* Left level number with orange accent on active */}
               <div className={`flex w-16 shrink-0 flex-col items-center justify-center py-6 border-r border-slate-100 ${!project.locked ? "border-l-4 border-l-orange-500" : "border-l-4 border-l-transparent"}`}>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Level</span>
@@ -163,6 +187,7 @@ export default function ProjectDashboardPage() {
                 <div className="shrink-0">
                   <button
                     disabled={project.locked}
+                    onClick={() => project.missionRoute && navigate(project.missionRoute)}
                     className={`rounded-xl px-6 py-3 text-sm font-semibold transition ${
                       project.locked
                         ? "bg-slate-100 text-slate-400 cursor-not-allowed"

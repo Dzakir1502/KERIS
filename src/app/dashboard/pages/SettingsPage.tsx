@@ -1,9 +1,10 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   Camera, CheckCircle2, Bot, MapPin,
-  User, Lock, ChevronRight, CreditCard, Shield
+  User, Lock, ChevronRight, CreditCard, Shield, Loader2, AlertCircle
 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 const TABS = [
   { id: "akun", label: "Informasi Akun", icon: User },
@@ -12,15 +13,108 @@ const TABS = [
 ]
 
 function AkunTab() {
-  const [nama, setNama] = useState("Aris Setiawan")
-  const [email] = useState("aris.setiawan@keris.id")
-  const [lokasi, setLokasi] = useState("Jakarta, Indonesia")
-  const [bio, setBio] = useState(
-    "Digital Architect dengan minat mendalam pada pengembangan karir berbasis teknologi AI dan kolaborasi komunitas kreatif."
-  )
-  const maxBio = 500
-  const fileRef = useRef<HTMLInputElement>(null)
+  const { user, updateUser } = useAuth()
   const navigate = useNavigate()
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // Local state untuk form
+  const [nama, setNama] = useState("")
+<<<<<<< HEAD
+  const [noHp, setNoHp] = useState("")
+=======
+>>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
+  const [bio, setBio] = useState("")
+  const [avatar, setAvatar] = useState("")
+  
+  // UI states
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState("")
+  const maxBio = 500
+
+  // Initialize dengan user data
+  useEffect(() => {
+    if (user) {
+      setNama(user.nama_lengkap || "")
+<<<<<<< HEAD
+      setNoHp(user.no_hp || "")
+=======
+>>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
+      setBio(user.bio || "")
+      setAvatar(user.avatar || "")
+    }
+  }, [user])
+
+  // Generate inisial dari nama
+  const initials = user?.nama_lengkap
+    ? user.nama_lengkap.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?"
+
+  // Get avatar color based on initials
+  const colors = ["bg-teal-500", "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-orange-600"]
+  const colorIndex = (user?.id || 0) % colors.length
+  const avatarBg = colors[colorIndex]
+
+  // Handle file upload - untuk MVP, simpan sebagai base64 atau URL
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validasi file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Ukuran file terlalu besar (maks 2MB)")
+      setTimeout(() => setError(""), 3000)
+      return
+    }
+
+    // Convert to base64 untuk disimpan
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAvatar(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Handle save
+  const handleSave = async () => {
+    if (!nama.trim()) {
+      setError("Nama lengkap tidak boleh kosong")
+      return
+    }
+
+<<<<<<< HEAD
+    if (!noHp.trim()) {
+      setError("Nomor HP tidak boleh kosong")
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError("")
+      
+      await updateUser({
+        nama_lengkap: nama,
+        no_hp: noHp,
+=======
+    try {
+      setLoading(true)
+      setError("")
+
+      await updateUser({
+        nama_lengkap: nama,
+>>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
+        bio: bio,
+        avatar: avatar,
+      })
+
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Gagal menyimpan perubahan")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[220px_1fr]">
@@ -30,8 +124,12 @@ function AkunTab() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center text-center space-y-4">
           {/* Avatar */}
           <div className="relative">
-            <div className="h-24 w-24 rounded-full bg-teal-500 flex items-center justify-center text-3xl font-bold text-white overflow-hidden">
-              A
+            <div className={`h-24 w-24 rounded-full ${avatarBg} flex items-center justify-center text-3xl font-bold text-white overflow-hidden`}>
+              {avatar ? (
+                <img src={avatar} alt={nama} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
             <button
               onClick={() => fileRef.current?.click()}
@@ -39,7 +137,7 @@ function AkunTab() {
             >
               <Camera className="h-4 w-4" />
             </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" />
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           </div>
           <div>
             <p className="text-sm font-bold text-blue-600">Foto Profil</p>
@@ -54,9 +152,14 @@ function AkunTab() {
             >
               Ganti Foto
             </button>
-            <button className="text-xs font-semibold text-red-400 hover:text-red-600 transition">
-              Hapus
-            </button>
+            {avatar && (
+              <button
+                onClick={() => setAvatar("")}
+                className="text-xs font-semibold text-red-400 hover:text-red-600 transition"
+              >
+                Hapus
+              </button>
+            )}
           </div>
         </div>
 
@@ -74,6 +177,30 @@ function AkunTab() {
 
       {/* Right — form */}
       <div className="space-y-4">
+        {/* Success message */}
+        {success && (
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-4 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-green-900">Perubahan Berhasil Disimpan</p>
+              <p className="text-xs text-green-700 mt-0.5">
+                Profil Anda telah diperbarui dan tersinkronisasi ke semua perangkat.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-900">Terjadi Kesalahan</p>
+              <p className="text-xs text-red-700 mt-0.5">{error}</p>
+            </div>
+          </div>
+        )}
+
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
 
           {/* Nama + Email */}
@@ -83,40 +210,46 @@ function AkunTab() {
               <input
                 value={nama}
                 onChange={(e) => setNama(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                disabled={loading}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Email</label>
               <input
-                value={email}
+                value={user?.email || ""}
                 readOnly
                 className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed"
               />
             </div>
           </div>
 
-          {/* Lokasi */}
+<<<<<<< HEAD
+          {/* Nomor HP */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Lokasi</label>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
-              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-              <input
-                value={lokasi}
-                onChange={(e) => setLokasi(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-slate-700 focus:outline-none"
-              />
-            </div>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Nomor HP</label>
+            <input
+              value={noHp}
+              onChange={(e) => setNoHp(e.target.value)}
+              disabled={loading}
+              type="tel"
+              placeholder="081234567890"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50"
+            />
           </div>
 
+=======
+>>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
           {/* Bio */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Bio</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value.slice(0, maxBio))}
+              disabled={loading}
               rows={4}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none transition"
+              placeholder="Ceritakan tentang diri Anda, passion, dan pengalaman Anda..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none transition disabled:opacity-50"
             />
             <p className="text-right text-[11px] text-slate-400">
               {bio.length} / {maxBio} karakter
@@ -127,12 +260,18 @@ function AkunTab() {
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
             <button
               onClick={() => navigate("/dashboard/profile")}
-              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+              disabled={loading}
+              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition disabled:opacity-50"
             >
               Batal
             </button>
-            <button className="rounded-xl bg-blue-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800 transition shadow-sm">
-              Simpan Perubahan
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="rounded-xl bg-blue-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800 transition shadow-sm disabled:opacity-50 flex items-center gap-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </div>

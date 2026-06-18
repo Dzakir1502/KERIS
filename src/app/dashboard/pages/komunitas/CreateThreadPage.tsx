@@ -2,8 +2,11 @@ import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   FileEdit, Bold, Italic, List, Link2, Image,
-  Code2, CloudUpload, CheckCircle2, SendHorizonal, X, ChevronDown
+  Code2, CloudUpload, CheckCircle2, SendHorizonal, X, ChevronDown,
+  Loader2, AlertCircle, CheckCircle
 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import communityAPI from "@/services/communityAPI"
 
 const KATEGORI_OPTIONS = ["Tech Discussion", "Tanya Jawab", "Sharing Project", "Guest Discussion", "Tips & Clue Cards", "General"]
 const TRACK_OPTIONS = ["Software Engineering", "Web Development", "Mobile Development", "AI & Machine Learning", "Data Science", "UI/UX Design"]
@@ -57,8 +60,10 @@ function Dropdown({
 
 export default function CreateThreadPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Form state
   const [title, setTitle] = useState("")
   const [kategori, setKategori] = useState("Tech Discussion")
   const [track, setTrack] = useState("Software Engineering")
@@ -68,6 +73,11 @@ export default function CreateThreadPage() {
   const [langOpen, setLangOpen] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
+
+  // Submit state
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -85,6 +95,51 @@ export default function CreateThreadPage() {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const handlePublish = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validation
+    if (!title.trim()) {
+      setError("Judul thread tidak boleh kosong")
+      return
+    }
+    if (!content.trim()) {
+      setError("Konten thread tidak boleh kosong")
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError("")
+
+      // Prepare payload
+      const threadData = {
+        title: title.trim(),
+        content: content.trim(),
+        category: kategori,
+        tags: codeSnippet ? [language] : [], // Add language as tag if code snippet exists
+      }
+
+      // Create thread via API
+      const res = await communityAPI.createThread(threadData)
+
+      if (res.data.success) {
+        setSuccess(true)
+        // Redirect after success
+        setTimeout(() => {
+          navigate("/dashboard/community")
+        }, 1500)
+      } else {
+        setError(res.data.message || "Gagal membuat thread")
+      }
+    } catch (err: any) {
+      console.error("Failed to create thread:", err)
+      setError(err.response?.data?.message || "Gagal membuat thread. Coba lagi.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const toolbarItems = [
     { icon: <Bold className="h-4 w-4" />, label: "Bold" },
     { icon: <Italic className="h-4 w-4" />, label: "Italic" },
@@ -92,6 +147,21 @@ export default function CreateThreadPage() {
     { icon: <Link2 className="h-4 w-4" />, label: "Link" },
     { icon: <Image className="h-4 w-4" />, label: "Image" },
   ]
+
+  if (!user) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+        <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-3" />
+        <p className="text-red-900 font-semibold">Anda harus login untuk membuat thread</p>
+        <button
+          onClick={() => navigate("/login")}
+          className="mt-4 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+        >
+          Pergi ke Login
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -108,7 +178,29 @@ export default function CreateThreadPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
+      {/* Success message */}
+      {success && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 flex items-start gap-3">
+          <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-green-900">Thread Berhasil Dibuat!</p>
+            <p className="text-xs text-green-700 mt-0.5">Mengalihkan ke halaman komunitas...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error message */}
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-red-900">Terjadi Kesalahan</p>
+            <p className="text-xs text-red-700 mt-0.5">{error}</p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handlePublish} className="grid gap-6 xl:grid-cols-[1fr_280px]">
 
         {/* ── Left: Form ── */}
         <div className="space-y-4">
@@ -123,7 +215,8 @@ export default function CreateThreadPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter a descriptive title for your thread..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                disabled={loading}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition disabled:opacity-50"
               />
             </div>
 
@@ -145,7 +238,8 @@ export default function CreateThreadPage() {
                   key={item.label}
                   type="button"
                   title={item.label}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition"
+                  disabled={loading}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition disabled:opacity-50"
                 >
                   {item.icon}
                 </button>
@@ -154,7 +248,8 @@ export default function CreateThreadPage() {
               <button
                 type="button"
                 title="Code Block"
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition"
+                disabled={loading}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition disabled:opacity-50"
               >
                 <Code2 className="h-4 w-4" />
               </button>
@@ -166,7 +261,8 @@ export default function CreateThreadPage() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your thread content here... Markdown is supported."
               rows={10}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition resize-none"
+              disabled={loading}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition resize-none disabled:opacity-50"
             />
           </div>
 
@@ -179,7 +275,8 @@ export default function CreateThreadPage() {
                 <button
                   type="button"
                   onClick={() => setLangOpen((p) => !p)}
-                  className="flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 hover:bg-slate-200 transition"
+                  disabled={loading}
+                  className="flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 hover:bg-slate-200 transition disabled:opacity-50"
                 >
                   {language}
                   <ChevronDown className={`h-3 w-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
@@ -207,14 +304,16 @@ export default function CreateThreadPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                <span className="ml-2 text-[10px] text-slate-500 font-mono">{language.toLowerCase()}</span>
               </div>
               <textarea
                 value={codeSnippet}
                 onChange={(e) => setCodeSnippet(e.target.value)}
-                placeholder={`// Paste your ${language} code here...`}
+                placeholder={`// Insert your ${language} code block here...`}
                 rows={8}
                 spellCheck={false}
-                className="w-full bg-slate-900 px-5 py-4 text-xs font-mono text-slate-300 placeholder-slate-600 focus:outline-none resize-none"
+                disabled={loading}
+                className="w-full bg-slate-900 px-5 py-4 text-xs font-mono text-slate-300 placeholder-slate-600 focus:outline-none resize-none disabled:opacity-50"
               />
             </div>
           </div>
@@ -231,12 +330,12 @@ export default function CreateThreadPage() {
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
+              onClick={() => !loading && fileRef.current?.click()}
               className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition ${
                 isDragging ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-slate-50 hover:border-blue-300"
-              }`}
+              } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <input ref={fileRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+              <input ref={fileRef} type="file" multiple disabled={loading} className="hidden" onChange={handleFileChange} />
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
                 <CloudUpload className="h-6 w-6 text-blue-500" />
               </div>
@@ -251,8 +350,10 @@ export default function CreateThreadPage() {
                   <div key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
                     <span className="text-xs text-slate-600 truncate max-w-[160px]">{file.name}</span>
                     <button
+                      type="button"
                       onClick={() => removeFile(i)}
-                      className="text-slate-300 hover:text-red-500 transition ml-2"
+                      disabled={loading}
+                      className="text-slate-300 hover:text-red-500 transition ml-2 disabled:opacity-50"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -276,20 +377,35 @@ export default function CreateThreadPage() {
           </div>
 
           {/* Publish */}
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition shadow-sm">
-            <SendHorizonal className="h-4 w-4" />
-            Publish Thread
+          <button
+            type="submit"
+            disabled={loading || success}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                <SendHorizonal className="h-4 w-4" />
+                Publish Thread
+              </>
+            )}
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/dashboard/community")}
-            className="flex w-full items-center justify-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition disabled:opacity-50"
           >
             <X className="h-4 w-4" />
             Batal
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

@@ -5,6 +5,12 @@ import HomePage from "@/app/home/HomePage"
 import LoginPage from "@/app/login/LoginPage"
 import RegisterPage from "@/app/register/RegisterPage"
 
+import AdminLayout from "@/app/admin/AdminLayout"
+import AdminOverviewPage from "@/app/admin/AdminOverviewPage"
+import AdminUsersPage from "@/app/admin/AdminUsersPage"
+import AdminProjectsPage from "@/app/admin/AdminProjectsPage"
+import AdminQuestsPage from "@/app/admin/AdminQuestsPage"
+
 import DashboardLayout from "@/app/dashboard/DashboardLayout"
 import DashboardHomePage from "@/app/dashboard/pages/DashboardHomePage"
 import ProfilePage from "@/app/dashboard/pages/ProfilePage"
@@ -18,6 +24,7 @@ import SubmissionPage from "@/app/dashboard/pages/project/SubmissionPage"
 import MicroLearningPage from "@/app/dashboard/pages/microlearning/MicroLearningPage"
 import ModuleDetailPage from "@/app/dashboard/pages/microlearning/ModuleDetailPage"
 import GamifiedQuestPage from "@/app/dashboard/pages/project/GamifiedQuestPage"
+import ProjectMissionPage from "@/app/dashboard/pages/project/ProjectMissionPage"
 import MentorPage from "@/app/dashboard/pages/mentor/MentorPage"
 import MentorProjectDetailPage from "@/app/dashboard/pages/mentor/MentorProjectDetailPage"
 import MentorEditSubmissionPage from "@/app/dashboard/pages/mentor/MentorEditSubmissionPage"
@@ -45,6 +52,15 @@ export default function App() {
         <Route path="/login" element={<><Navbar /><LoginPage /></>} />
         <Route path="/register" element={<><Navbar /><RegisterPage /></>} />
 
+        {/* Admin routes — separate layout, only for admin role */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminOverviewPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="projects" element={<AdminProjectsPage />} />
+          <Route path="quests" element={<AdminQuestsPage />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
+
         {/* Dashboard routes — layout with sidebar */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardHomePage />} />
@@ -61,6 +77,7 @@ export default function App() {
           <Route path="project">
             <Route index element={<ProjectAccessPage />} />
             <Route path="dashboard" element={<ProjectDashboardPage />} />
+            <Route path="mission/:levelId" element={<ProjectMissionPage />} />
             <Route path="status" element={<ProjectStatusPage />} />
             <Route path="submission" element={<SubmissionPage />} />
             <Route path="gamified-quest" element={<GamifiedQuestPage />} />

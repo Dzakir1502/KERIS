@@ -1,53 +1,70 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { MessageCircle, Heart, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { MessageCircle, Heart, ChevronDown, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import communityAPI, { type Thread } from "@/services/communityAPI"
 
 const trackFilters = ["Opini", "Web Dev", "Mobile Dev", "AI"]
 const kategoriFilters = ["Tanya Jawab", "Sharing Project", "Guest Discussion", "Tips & Clue Cards", "General"]
 
-const threads = [
-  {
-    id: 1,
-    tags: [
-      { label: "WEB DEV", color: "bg-orange-100 text-orange-600" },
-      { label: "SHARING PROJECT", color: "bg-orange-100 text-orange-600" },
-    ],
-    postedAgo: "Posted 2h ago",
-    title: "Membangun E-Commerce Dengan Tech Stack Next.js 14 & Supabase",
-    description:
-      "Halo teman-teman! Saya baru saja menyelesaikan project dashboard e-commerce menggunakan App Router dan...",
-    author: "Felix Kurniawan",
-    authorInitial: "FK",
-    authorBg: "bg-blue-600",
-    comments: 24,
-    likes: 89,
-    hasImage: true,
-  },
-  {
-    id: 2,
-    tags: [
-      { label: "AI", color: "bg-teal-100 text-teal-700" },
-      { label: "TANYA JAWAB", color: "bg-orange-100 text-orange-600" },
-    ],
-    postedAgo: "Posted 5h ago",
-    title: "Bagaimana Cara Implementasi RAG (Retrieval Augmented Generation) di Local?",
-    description:
-      "Saya sedang mencoba menjalankan Llama3 secara local, tapi masih bingung bagaimana cara menghubungkan dokumen PDF saya ke model tersebut agar hasilnya akurat.",
-    author: "Sarah J.",
-    authorInitial: "SJ",
-    authorBg: "bg-slate-400",
-    comments: 12,
-    likes: 45,
-    hasImage: false,
-  },
-]
-
 export default function CommunityPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+
   const [selectedTracks, setSelectedTracks] = useState<string[]>(["Web Dev"])
   const [selectedKategori, setSelectedKategori] = useState("Sharing Project")
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = 10
+  const [sort, setSort] = useState<"latest" | "trending">("latest")
+
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const limit = 10
+  const totalPages = Math.ceil(totalCount / limit)
+
+  // useCallback agar referensi stabil — mencegah infinite effect loop
+  const fetchThreads = useCallback(async (page: number, kategori: string, sortBy: "latest" | "trending") => {
+    try {
+      setLoading(true)
+      setError("")
+
+      const res = await communityAPI.getAllThreads({
+        page,
+        limit,
+        category: kategori,
+        sort: sortBy,
+      })
+
+      const data = res.data.data
+      setThreads(data.data || [])
+      setTotalCount(data.pagination?.total || 0)
+    } catch (err: any) {
+      console.error("Failed to fetch threads:", err)
+      // Jika backend mati / belum berjalan, tampilkan pesan ramah
+      if (!err.response) {
+        setError("Tidak dapat terhubung ke server. Pastikan backend sudah berjalan di port 5000.")
+      } else {
+        setError(err.response?.data?.message || "Gagal memuat threads")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Satu useEffect tunggal — semua dependency digabung
+  // Reset page ke 1 saat filter berubah, fetch dengan page baru
+  useEffect(() => {
+    setCurrentPage(1)
+    fetchThreads(1, selectedKategori, sort)
+  }, [selectedKategori, sort, fetchThreads])
+
+  // Effect terpisah hanya untuk perubahan page (tidak reset filter)
+  useEffect(() => {
+    if (currentPage === 1) return // sudah dihandle effect di atas
+    fetchThreads(currentPage, selectedKategori, sort)
+  }, [currentPage])
 
   const toggleTrack = (track: string) => {
     setSelectedTracks((prev) =>
@@ -55,9 +72,26 @@ export default function CommunityPage() {
     )
   }
 
+  const formatTimeAgo = (date: string) => {
+    const now = new Date()
+    const posted = new Date(date)
+    const seconds = Math.floor((now.getTime() - posted.getTime()) / 1000)
+    if (seconds < 60) return "Baru saja"
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+    return `${Math.floor(seconds / 86400)}d ago`
+  }
+
+  const getInitials = (name: string) =>
+    name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+
+  const getAvatarColor = (id: number) => {
+    const colors = ["bg-blue-600", "bg-teal-600", "bg-purple-600", "bg-pink-600", "bg-orange-600"]
+    return colors[id % colors.length]
+  }
+
   return (
     <div className="space-y-4">
-
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -75,11 +109,8 @@ export default function CommunityPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[220px_1fr]">
-
-        {/* Left sidebar — filters */}
+        {/* Sidebar filter */}
         <div className="space-y-6">
-
-          {/* Filter Track */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-0.5 h-4 bg-orange-500 rounded-full" />
@@ -112,7 +143,6 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {/* Filter Kategori */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400 mb-3">Filter Kategori</p>
             <div className="space-y-0.5">
@@ -123,9 +153,7 @@ export default function CommunityPage() {
                     key={kat}
                     onClick={() => setSelectedKategori(kat)}
                     className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition ${
-                      active
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      active ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
                     {kat}
@@ -136,143 +164,153 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Right — threads */}
+        {/* Thread list */}
         <div className="space-y-4">
-
-          {/* Sort + count bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <span>Urutkan:</span>
-              <button className="flex items-center gap-1 font-semibold text-slate-900 hover:text-blue-600 transition">
-                Terbaru
+              <button
+                onClick={() => setSort(sort === "latest" ? "trending" : "latest")}
+                className="flex items-center gap-1 font-semibold text-slate-900 hover:text-blue-600 transition"
+              >
+                {sort === "latest" ? "Terbaru" : "Trending"}
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </div>
-            <p className="text-sm text-slate-500 font-medium">124 Threads Found</p>
+            <p className="text-sm text-slate-500 font-medium">{totalCount} Threads Found</p>
           </div>
 
-          {/* Thread list */}
-          <div className="space-y-3">
-            {threads.map((thread) => (
-              <div
-                key={thread.id}
-                onClick={() => navigate(`/dashboard/community/${thread.id}`)}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer"
+          {error && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-red-900">Terjadi Kesalahan</p>
+                <p className="text-xs text-red-700 mt-0.5">{error}</p>
+                <button
+                  onClick={() => fetchThreads(currentPage, selectedKategori, sort)}
+                  className="mt-2 text-xs font-semibold text-red-600 hover:underline"
+                >
+                  Coba lagi
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <p className="text-sm text-slate-500">Memuat threads...</p>
+            </div>
+          ) : threads.length === 0 && !error ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+              <p className="text-sm text-slate-500">Tidak ada threads untuk kategori ini</p>
+              <button
+                onClick={() => navigate("/dashboard/community/create")}
+                className="mt-4 rounded-xl bg-blue-900 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
               >
-                <div className="flex gap-4">
-                  <div className="flex-1 min-w-0">
-                    {/* Tags + time */}
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                      {thread.tags.map((tag) => (
-                        <span
-                          key={tag.label}
-                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] ${tag.color}`}
-                        >
-                          {tag.label}
-                        </span>
-                      ))}
-                      <span className="ml-auto text-xs text-slate-400">{thread.postedAgo}</span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-slate-900 leading-snug">
-                      {thread.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="mt-2 text-sm text-slate-500 leading-relaxed line-clamp-2">
-                      {thread.description}
-                    </p>
-
-                    {/* Author + stats */}
-                    <div className="mt-4 flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-8 w-8 rounded-full ${thread.authorBg} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
-                          {thread.authorInitial}
+                Buat Thread Pertama
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {threads.map((thread) => (
+                  <div
+                    key={thread.id}
+                    onClick={() => navigate(`/dashboard/community/${thread.id}`)}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer"
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] bg-blue-100 text-blue-700">
+                            {thread.category}
+                          </span>
+                          <span className="ml-auto text-xs text-slate-400">{formatTimeAgo(thread.createdAt)}</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-700">{thread.author}</span>
-                      </div>
-                      <div className="flex items-center gap-3 ml-2 text-slate-400 text-sm">
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          {thread.comments}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-4 w-4" />
-                          {thread.likes}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Image thumbnail */}
-                  {thread.hasImage && (
-                    <div className="shrink-0 hidden sm:block">
-                      <div className="h-28 w-44 rounded-xl bg-slate-900 overflow-hidden flex items-center justify-center">
-                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-950 p-3">
-                          <div className="space-y-1.5">
-                            {[...Array(8)].map((_, i) => (
-                              <div
-                                key={i}
-                                className="h-1.5 rounded-full bg-slate-600"
-                                style={{ width: `${60 + Math.random() * 35}%`, opacity: 0.6 + i * 0.05 }}
-                              />
-                            ))}
+                        <h3 className="text-lg font-bold text-slate-900 leading-snug">{thread.title}</h3>
+                        <p className="mt-2 text-sm text-slate-500 leading-relaxed line-clamp-2">
+                          {(thread.content ?? "").substring(0, 150)}{(thread.content ?? "").length > 150 ? "..." : ""}
+                        </p>
+                        <div className="mt-4 flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-8 w-8 rounded-full ${getAvatarColor(thread.authorId)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                              {getInitials(thread.author?.nama_lengkap || "User")}
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700">
+                              {thread.author?.nama_lengkap || "Unknown"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 ml-2 text-slate-400 text-sm">
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="h-4 w-4" />
+                              {Array.isArray(thread.replies) ? thread.replies.length : 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Heart className="h-4 w-4" />
+                              {thread.likes}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-1 pt-2">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition disabled:opacity-30"
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 pt-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition disabled:opacity-30"
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
 
-            {[1, 2, 3].map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition ${
-                  currentPage === page
-                    ? "bg-slate-900 text-white shadow"
-                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
+                  {[...Array(Math.min(3, totalPages))].map((_, i) => {
+                    const page = i + 1
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition ${
+                          currentPage === page
+                            ? "bg-slate-900 text-white shadow"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  })}
 
-            <span className="px-1 text-slate-400 text-sm">...</span>
+                  {totalPages > 3 && <span className="px-1 text-slate-400 text-sm">...</span>}
 
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition ${
-                currentPage === totalPages
-                  ? "bg-slate-900 text-white shadow"
-                  : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {totalPages}
-            </button>
+                  {totalPages > 3 && (
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition ${
+                        currentPage === totalPages
+                          ? "bg-slate-900 text-white shadow"
+                          : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  )}
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition disabled:opacity-30"
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition disabled:opacity-30"
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

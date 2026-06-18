@@ -3,26 +3,19 @@ import { Outlet, useNavigate, useLocation, Link } from "react-router-dom"
 import {
   CircleDot, Command, ChevronDown, LayoutDashboard,
   MessageCircle, Settings, Trophy, Users, UserCircle, Bot,
-  Activity, Upload, BookOpen, Gamepad2
+  Activity, Upload, BookOpen, Gamepad2, LogOut
 } from "lucide-react"
 import logo from "@/assets/hero.png"
-
-const sidebarBottomItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Help", icon: CircleDot },
-]
+import { useAuth } from "@/context/AuthContext"
 
 export default function DashboardLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const path = location.pathname
+  const { user, logout } = useAuth()
 
-  const [chatOpen, setChatOpen] = useState(
-    path.startsWith("/dashboard/chat")
-  )
-  const [projectOpen, setProjectOpen] = useState(
-    path.startsWith("/dashboard/project")
-  )
+  const [chatOpen, setChatOpen] = useState(path.startsWith("/dashboard/chat"))
+  const [projectOpen, setProjectOpen] = useState(path.startsWith("/dashboard/project"))
 
   const isChatGroupActive = path.startsWith("/dashboard/chat")
   const isProjectGroupActive = path.startsWith("/dashboard/project")
@@ -41,9 +34,14 @@ export default function DashboardLayout() {
 
   const isActive = (route: string) => path === route
 
+  // Ambil inisial nama untuk avatar
+  const initials = user?.nama_lengkap
+    ? user.nama_lengkap.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?"
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] text-slate-900">
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-360 px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[260px_1fr]">
 
           {/* Sidebar */}
@@ -57,6 +55,19 @@ export default function DashboardLayout() {
               </Link>
             </div>
 
+            {/* User info mini */}
+            {user && (
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-orange-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{user.nama_lengkap}</p>
+                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            )}
+
             {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-1">
 
@@ -66,13 +77,13 @@ export default function DashboardLayout() {
               <NavBtn path="/dashboard/profile" label="Profil" icon={<UserCircle className="h-5 w-5" />}
                 active={isActive("/dashboard/profile")} onClick={() => navigate("/dashboard/profile")} />
 
-              {/* Chat bot & IT Career — dropdown */}
+              {/* Chat bot & IT Career */}
               <div>
                 <button
                   onClick={toggleChat}
                   className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium text-left transition-all ${
                     isChatGroupActive
-                      ? "bg-blue-50 text-blue-700"
+                      ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -81,7 +92,7 @@ export default function DashboardLayout() {
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${chatOpen ? "rotate-180" : ""}`} />
                 </button>
                 {chatOpen && (
-                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-blue-100 pl-3">
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-slate-200 pl-3">
                     <SubBtn label="AI Talent Scout" icon={<Bot className="h-4 w-4 shrink-0" />}
                       active={isActive("/dashboard/chat/ai-talent")}
                       onClick={() => navigate("/dashboard/chat/ai-talent")} />
@@ -92,13 +103,13 @@ export default function DashboardLayout() {
                 )}
               </div>
 
-              {/* Project Workspace — dropdown */}
+              {/* Project Workspace */}
               <div>
                 <button
                   onClick={toggleProject}
                   className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium text-left transition-all ${
                     isProjectGroupActive
-                      ? "bg-blue-50 text-blue-700"
+                      ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -107,7 +118,7 @@ export default function DashboardLayout() {
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${projectOpen ? "rotate-180" : ""}`} />
                 </button>
                 {projectOpen && (
-                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-blue-100 pl-3">
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-slate-200 pl-3">
                     <SubBtn label="Project Dashboard" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />}
                       active={isActive("/dashboard/project/dashboard")}
                       onClick={() => navigate("/dashboard/project/dashboard")} />
@@ -158,10 +169,18 @@ export default function DashboardLayout() {
                 <CircleDot className="h-5 w-5" />
                 Help
               </button>
+              {/* Tombol Logout */}
+              <button
+                onClick={logout}
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm text-red-500 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <LogOut className="h-5 w-5" />
+                Keluar
+              </button>
             </div>
           </aside>
 
-          {/* Page content via nested route */}
+          {/* Page content */}
           <section className="space-y-6 min-h-screen">
             <Outlet />
           </section>
@@ -200,7 +219,7 @@ function SubBtn({ label, icon, active, onClick }: {
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-left transition-all ${
         active
-          ? "bg-blue-600 text-white shadow-sm"
+          ? "bg-slate-900 text-white shadow-sm"
           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >

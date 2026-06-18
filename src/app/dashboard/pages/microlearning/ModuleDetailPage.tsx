@@ -109,7 +109,7 @@ export default function ModuleDetailPage() {
   const mod = modulesData[moduleId ?? "1"] ?? modulesData["1"]
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ "HTML Tags": true })
-  const [progress] = useState(12) // seconds played out of 45:00
+ 
 
   const toggleSection = (section: string) =>
     setExpandedSections((p) => ({ ...p, [section]: !p[section] }))
