@@ -44,7 +44,7 @@ const TOTAL_PROJECTS = projects.length
 export default function ProjectDashboardPage() {
   const navigate = useNavigate()
   const [approved, setApproved] = useState(0)
-  const [submitted, setSubmitted] = useState(0)
+  const [, setSubmitted] = useState(0)
   const [loadingStats, setLoadingStats] = useState(true)
 
   useEffect(() => {

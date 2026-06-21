@@ -258,7 +258,7 @@ export default function ThreadDetailPage() {
     fetchThread()
   }, [threadId])
 
-  const handleReplySubmit = async (message: string, code: string, language: string) => {
+  const handleReplySubmit = async (message: string, _code: string, _language: string) => {
     if (!threadId) return
 
     try {

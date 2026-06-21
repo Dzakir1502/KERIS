@@ -9,7 +9,7 @@ const kategoriFilters = ["Tanya Jawab", "Sharing Project", "Guest Discussion", "
 
 export default function CommunityPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  useAuth()
 
   const [selectedTracks, setSelectedTracks] = useState<string[]>(["Web Dev"])
   const [selectedKategori, setSelectedKategori] = useState("Sharing Project")
