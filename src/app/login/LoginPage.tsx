@@ -25,9 +25,6 @@ export default function LoginPage() {
       localStorage.setItem('token', token);
       await refreshUser();
 
-<<<<<<< HEAD
-      navigate('/dashboard');
-=======
       // Decode role from JWT payload
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.role === 'admin') {
@@ -35,7 +32,6 @@ export default function LoginPage() {
       } else {
         navigate('/dashboard');
       }
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login gagal');
     } finally {

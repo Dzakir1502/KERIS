@@ -5,20 +5,13 @@ import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 
 interface RegisterSectionProps {
-<<<<<<< HEAD
   onRegister: (nama_lengkap: string, email: string, no_hp: string, password: string) => Promise<void>;
-=======
-  onRegister: (nama_lengkap: string, email: string, password: string) => Promise<void>;
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   nama_lengkap: string;
   setNamaLengkap: (nama: string) => void;
   email: string;
   setEmail: (email: string) => void;
-<<<<<<< HEAD
   no_hp: string;
   setNoHp: (no_hp: string) => void;
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   password: string;
   setPassword: (password: string) => void;
   error: string;
@@ -31,11 +24,8 @@ export default function RegisterSection({
   setNamaLengkap,
   email,
   setEmail,
-<<<<<<< HEAD
   no_hp,
   setNoHp,
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   password,
   setPassword,
   error,
@@ -45,11 +35,7 @@ export default function RegisterSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
     await onRegister(nama_lengkap, email, no_hp, password);
-=======
-    await onRegister(nama_lengkap, email, password);
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   }
 
   return (
@@ -105,7 +91,6 @@ export default function RegisterSection({
               className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
               disabled={loading}
               required
-<<<<<<< HEAD
             />
           </div>
 
@@ -122,8 +107,6 @@ export default function RegisterSection({
               className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
               disabled={loading}
               required
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
             />
           </div>
 

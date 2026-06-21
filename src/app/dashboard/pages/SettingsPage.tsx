@@ -19,10 +19,7 @@ function AkunTab() {
 
   // Local state untuk form
   const [nama, setNama] = useState("")
-<<<<<<< HEAD
   const [noHp, setNoHp] = useState("")
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   const [bio, setBio] = useState("")
   const [avatar, setAvatar] = useState("")
   
@@ -36,10 +33,7 @@ function AkunTab() {
   useEffect(() => {
     if (user) {
       setNama(user.nama_lengkap || "")
-<<<<<<< HEAD
       setNoHp(user.no_hp || "")
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
       setBio(user.bio || "")
       setAvatar(user.avatar || "")
     }
@@ -82,7 +76,6 @@ function AkunTab() {
       return
     }
 
-<<<<<<< HEAD
     if (!noHp.trim()) {
       setError("Nomor HP tidak boleh kosong")
       return
@@ -95,14 +88,6 @@ function AkunTab() {
       await updateUser({
         nama_lengkap: nama,
         no_hp: noHp,
-=======
-    try {
-      setLoading(true)
-      setError("")
-
-      await updateUser({
-        nama_lengkap: nama,
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
         bio: bio,
         avatar: avatar,
       })
@@ -224,7 +209,6 @@ function AkunTab() {
             </div>
           </div>
 
-<<<<<<< HEAD
           {/* Nomor HP */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Nomor HP</label>
@@ -238,8 +222,6 @@ function AkunTab() {
             />
           </div>
 
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
           {/* Bio */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Bio</label>

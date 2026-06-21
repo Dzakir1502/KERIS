@@ -13,10 +13,7 @@ export interface UserProfile {
   avatar: string;
   level: number;
   points: number;
-<<<<<<< HEAD
-=======
   role: "user" | "mentor" | "admin";
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   createdAt: string;
 }
 

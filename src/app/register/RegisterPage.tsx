@@ -10,10 +10,7 @@ export default function RegisterPage() {
 
   const [nama_lengkap, setNamaLengkap] = useState('');
   const [email, setEmail] = useState('');
-<<<<<<< HEAD
   const [no_hp, setNoHp] = useState('');
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,10 +18,7 @@ export default function RegisterPage() {
   const handleRegister = async (
     nama_lengkap: string,
     email: string,
-<<<<<<< HEAD
     no_hp: string,
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
     password: string
   ) => {
     try {
@@ -34,10 +28,7 @@ export default function RegisterPage() {
       const res = await api.post('/auth/register', {
         nama_lengkap,
         email,
-<<<<<<< HEAD
         no_hp,
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
         password,
       });
 
@@ -61,11 +52,8 @@ export default function RegisterPage() {
       setNamaLengkap={setNamaLengkap}
       email={email}
       setEmail={setEmail}
-<<<<<<< HEAD
       no_hp={no_hp}
       setNoHp={setNoHp}
-=======
->>>>>>> 83631dfa5f7a04d89d0a219e8cc90189215aa9b3
       password={password}
       setPassword={setPassword}
       error={error}
