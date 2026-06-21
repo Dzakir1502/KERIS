@@ -19,6 +19,7 @@ function AkunTab() {
 
   // Local state untuk form
   const [nama, setNama] = useState("")
+  const [noHp, setNoHp] = useState("")
   const [bio, setBio] = useState("")
   const [avatar, setAvatar] = useState("")
   
@@ -32,6 +33,7 @@ function AkunTab() {
   useEffect(() => {
     if (user) {
       setNama(user.nama_lengkap || "")
+      setNoHp(user.no_hp || "")
       setBio(user.bio || "")
       setAvatar(user.avatar || "")
     }
@@ -74,12 +76,18 @@ function AkunTab() {
       return
     }
 
+    if (!noHp.trim()) {
+      setError("Nomor HP tidak boleh kosong")
+      return
+    }
+
     try {
       setLoading(true)
       setError("")
-
+      
       await updateUser({
         nama_lengkap: nama,
+        no_hp: noHp,
         bio: bio,
         avatar: avatar,
       })
@@ -199,6 +207,19 @@ function AkunTab() {
                 className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed"
               />
             </div>
+          </div>
+
+          {/* Nomor HP */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.18em]">Nomor HP</label>
+            <input
+              value={noHp}
+              onChange={(e) => setNoHp(e.target.value)}
+              disabled={loading}
+              type="tel"
+              placeholder="081234567890"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50"
+            />
           </div>
 
           {/* Bio */}

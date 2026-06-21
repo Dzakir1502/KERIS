@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
-import { Settings, Share2, Star, Zap, BookOpen, Award, User, Mail, CalendarDays } from "lucide-react"
+import { Settings, Share2, Star, Zap, BookOpen, Award, User, Phone, Mail, CalendarDays } from "lucide-react"
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -63,6 +63,7 @@ export default function ProfilePage() {
   const personalInfo = [
     { icon: <User  className="h-3.5 w-3.5" />, label: "Nama Lengkap", value: user.nama_lengkap },
     { icon: <Mail  className="h-3.5 w-3.5" />, label: "Email",        value: user.email        },
+    { icon: <Phone className="h-3.5 w-3.5" />, label: "Nomor HP",     value: user.no_hp || "—" },
     { icon: <CalendarDays className="h-3.5 w-3.5" />, label: "Bergabung", value: joinDate      },
   ]
 

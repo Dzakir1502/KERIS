@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 
 interface RegisterSectionProps {
-  onRegister: (nama_lengkap: string, email: string, password: string) => Promise<void>;
+  onRegister: (nama_lengkap: string, email: string, no_hp: string, password: string) => Promise<void>;
   nama_lengkap: string;
   setNamaLengkap: (nama: string) => void;
   email: string;
   setEmail: (email: string) => void;
+  no_hp: string;
+  setNoHp: (no_hp: string) => void;
   password: string;
   setPassword: (password: string) => void;
   error: string;
@@ -22,6 +24,8 @@ export default function RegisterSection({
   setNamaLengkap,
   email,
   setEmail,
+  no_hp,
+  setNoHp,
   password,
   setPassword,
   error,
@@ -31,7 +35,7 @@ export default function RegisterSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onRegister(nama_lengkap, email, password);
+    await onRegister(nama_lengkap, email, no_hp, password);
   }
 
   return (
@@ -84,6 +88,22 @@ export default function RegisterSection({
               placeholder="nama@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="no_hp" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Nomor HP
+            </label>
+            <Input
+              id="no_hp"
+              type="tel"
+              placeholder="08123456789"
+              value={no_hp}
+              onChange={(e) => setNoHp(e.target.value)}
               className="rounded-xl border-gray-200 focus-visible:ring-blue-500"
               disabled={loading}
               required
